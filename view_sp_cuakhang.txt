@@ -1,0 +1,283 @@
+CREATE VIEW [dbo].[V_DS_PHANMANH]
+AS
+SELECT  TENCN=PUBS.name, TENSERVER= subscriber_server
+   FROM dbo.sysmergepublications PUBS,  dbo.sysmergesubscriptions SUBS
+   WHERE PUBS.pubid= SUBS.PUBID  AND PUBS.publisher <> SUBS.subscriber_server
+
+------------
+
+create view [dbo].[VIEW_SLT_KHO]
+as
+select hh.MAHH, hh.TENHH, k.MAKHO, sum(ctpn.SOLUONG) as total
+from HangHoa as hh
+inner join CTPN as ctpn on hh.MAHH = ctpn.MAHH
+inner join PhieuNhap as pn on pn.SoPN= ctpn.SoPN
+inner join KHO as k on k.MAKHO = pn.MAKHO
+group by hh.MAHH, hh.TENHH, k.MAKHO
+
+---------------
+
+
+CREATE PROCEDURE [dbo].[SP_CCN] 
+	@MANV INT, 
+	@MACN nchar(10)
+AS
+DECLARE @LGNAME VARCHAR(50)
+DECLARE @USERNAME VARCHAR(50)
+SET XACT_ABORT ON;
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+BEGIN
+	--BEGIN DISTRIBUTED TRAN
+		DECLARE @HONV NVARCHAR(40)
+		DECLARE @TENNV NVARCHAR(10)
+		DECLARE @DIACHINV NVARCHAR(100)
+		DECLARE @LUONGNV decimal(10,2)	
+		DECLARE @SDT NVARCHAR(100)
+		DECLARE @GT NCHAR(5)
+		-- Lưu lại thông tin nhân viên cần chuyển chi nhánh để làm điều kiện kiểm tra
+		SELECT @HONV = HO, @TENNV = TEN, @DIACHINV = DIACHI, @LUONGNV = LUONG, @SDT= SDT, @GT= GIOITINH FROM NhanVien WHERE MANV = @MANV
+
+		-- Kiểm tra xem bên Site chuyển tới đã có dữ liệu nhân viên đó chưa. Nếu có rồi thì đổi trạng thái, chưa thì thêm vào
+		IF @MACN = 'CN1'
+		BEGIN
+			IF EXISTS (
+				SELECT MANV
+				FROM LINK1.QLVT_UDPT.dbo.NhanVien
+				WHERE HO = @HONV AND TEN = @TENNV AND DIACHI = @DIACHINV AND LUONG = @LUONGNV AND SDT = @SDT AND GIOITINH = @GT
+			)
+			BEGIN
+				-- Update the existing record in link2
+				UPDATE LINK1.QLVT_UDPT.dbo.NhanVien
+				SET TrangThai = 0
+				WHERE MANV = (
+					SELECT MANV
+					FROM LINK1.QLVT_UDPT.dbo.NhanVien
+					WHERE HO = @HONV AND TEN = @TENNV AND DIACHI = @DIACHINV AND LUONG = @LUONGNV AND SDT = @SDT AND GIOITINH = @GT
+				)
+			END
+			ELSE
+			BEGIN
+				-- Insert a new record into link2
+				INSERT INTO LINK1.QLVT_UDPT.dbo.NhanVien (MANV, HO, TEN, DIACHI, LUONG, MACN, SDT, GIOITINH,TRANGTHAI)
+				VALUES ((SELECT MAX(MANV) FROM LINK0.QLVT_UDPT.dbo.NhanVien) + 1, @HONV, @TENNV, @DIACHINV, @LUONGNV, @MACN, @SDT, @GT, 0)
+			END
+		END
+		ELSE IF @MACN = 'CN2'
+		BEGIN
+			IF EXISTS (
+				SELECT MANV
+				FROM LINK2.QLVT_UDPT.dbo.NhanVien
+				WHERE HO = @HONV AND TEN = @TENNV AND DIACHI = @DIACHINV AND LUONG = @LUONGNV AND SDT = @SDT AND GIOITINH = @GT
+			)
+			BEGIN
+				-- Update the existing record in link1
+				UPDATE LINK2.QLVT_UDPT.dbo.NhanVien
+				SET TrangThai = 0
+				WHERE MANV = (
+					SELECT MANV
+					FROM LINK2.QLVT_UDPT.dbo.NhanVien
+					WHERE HO = @HONV AND TEN = @TENNV AND DIACHI = @DIACHINV AND LUONG = @LUONGNV AND SDT = @SDT AND GIOITINH = @GT
+				)
+			END
+			ELSE
+			BEGIN
+				-- Insert a new record into link1
+				INSERT INTO LINK2.QLVT_UDPT.dbo.NhanVien (MANV, HO, TEN, DIACHI, LUONG, MACN, SDT, GIOITINH, TRANGTHAI)
+				VALUES ((SELECT MAX(MANV) FROM link1.QLVT_UDPT.dbo.NhanVien) + 1, @HONV, @TENNV, @DIACHINV, @LUONGNV, @MACN, @SDT, @GT, 0)
+			END
+		END
+
+		-- Đổi trạng thái xóa đối với tài khoản cũ ở site hiện tại
+		UPDATE dbo.NhanVien
+		SET TrangThai = 1
+		WHERE MANV = @MANV
+		
+	--COMMIT TRAN;
+
+	-- Check if the employee has a login and drop it
+	IF EXISTS (SELECT SUSER_SNAME(sid) FROM sys.sysusers WHERE name = CAST(@MANV AS NVARCHAR))
+	BEGIN
+		SET @LGNAME = CAST((SELECT SUSER_SNAME(sid) FROM sys.sysusers WHERE name = CAST(@MANV AS NVARCHAR)) AS VARCHAR(50))
+		SET @USERNAME = CAST(@MANV AS VARCHAR(50))
+		EXEC SP_DROPUSER @USERNAME;
+		EXEC SP_DROPLOGIN @LGNAME;
+	END
+END
+
+-----------
+
+
+
+create PROCEDURE [dbo].[SP_CLONE_CTDDH]
+	 @SOPN NCHAR(10)
+as
+BEGIN
+    INSERT INTO CTPN (SoPN, MAHH, SOLUONG, DONGIA)
+    SELECT @SOPN AS SoPN, MAHH, SOLUONG, DONGIA
+    FROM CTDDH
+    WHERE MADDH = (select MADDH from PhieuNhap where SoPN= @SOPN);
+END 
+
+------------
+
+
+CREATE PROC [dbo].[sp_DangKy]
+  @USERNAME VARCHAR(50),
+  @PASS VARCHAR(50),
+  @MANV VARCHAR(50),
+  @ROLE VARCHAR(50)
+AS
+  DECLARE @RET INT
+
+  -- Tạo login từ biến LGNAME VÀ PASS
+  EXEC @RET = SP_ADDLOGIN @USERNAME, @PASS,'QLVT_UDPT' 
+  IF (@RET = 1)  -- LOGIN NAME BI TRUNG
+     RETURN 1
+
+  -- Thêm User vào CSDL hiện hành từ biến USERNAME
+  EXEC @RET= SP_GRANTDBACCESS @USERNAME, @MANV 
+  IF (@RET = 1)  -- USER  NAME BI TRUNG
+  BEGIN
+       EXEC SP_DROPLOGIN @USERNAME
+       RETURN 2
+  END
+
+  -- Thêm Role NganHang hoặc ChiNhanh cho User từ biến USERNAME VÀ ROLE
+  EXEC sp_addrolemember @ROLE, @MANV
+
+RETURN 0
+
+-----------
+
+
+CREATE PROC [dbo].[SP_DANGNHAP]
+@TENLOGIN NVARCHAR (50)
+AS
+DECLARE @TENUSER NVARCHAR(50)
+SELECT @TENUSER=NAME FROM sys.sysusers WHERE sid = SUSER_SID(@TENLOGIN)
+ 
+ SELECT USERNAME = @TENUSER, 
+  HOTEN = (SELECT HO+ ' '+ TEN FROM NHANVIEN  WHERE MANV = @TENUSER ),
+   TENNHOM= NAME
+   FROM sys.sysusers 
+   WHERE UID = (SELECT GROUPUID 
+                 FROM SYS.SYSMEMBERS 
+                   WHERE MEMBERUID= (SELECT UID FROM sys.sysusers 
+                                      WHERE NAME=@TENUSER))
+
+----------
+
+
+CREATE PROCEDURE [dbo].[sp_get_role]
+    @manv INT
+AS
+BEGIN
+    SELECT
+        p.name AS EmployeeName,
+        r.name AS RoleName
+    FROM sys.database_principals AS p
+    INNER JOIN sys.database_role_members AS rm ON p.principal_id = rm.member_principal_id
+    INNER JOIN sys.database_principals AS r ON rm.role_principal_id = r.principal_id
+    WHERE p.name = (SELECT MANV FROM NhanVien WHERE MANV = @manv);
+END
+
+----------
+
+
+CREATE PROCEDURE [dbo].[SP_GIAMSL]
+   @MAHH NCHAR(10), @SOLUONG INT
+AS
+BEGIN
+	SET XACT_ABORT ON 
+	BEGIN DISTRIBUTED TRANSACTION;
+
+-- Update SOLUONG from local instance.
+	UPDATE DBO.HangHoa
+	SET SOLUONGTON = SOLUONGTON - @SOLUONG
+	WHERE MAHH = @MAHH
+
+  COMMIT TRANSACTION;
+END
+
+-----------
+
+
+create PROCEDURE [dbo].[SP_GIAMSL_KHO_PN]
+   @MAHH NCHAR(10),  @SOLUONG INT
+AS
+BEGIN
+	SET XACT_ABORT ON 
+	BEGIN DISTRIBUTED TRANSACTION;
+
+-- Update SOLUONG from local instance.
+	UPDATE DBO.HangHoa
+	SET SOLUONGTON = SOLUONGTON - @SOLUONG
+	WHERE MAHH = @MAHH
+
+  COMMIT TRANSACTION;
+END
+
+-----------
+
+
+CREATE procedure [dbo].[SP_ListNV]
+@CN nvarchar(50)
+AS
+begin
+select TEN, HO
+from NhanVien
+where MACN = @CN
+order by TEN, HO
+end
+
+----------
+
+
+CREATE PROCEDURE [dbo].[SP_TANGSL]
+   @MAHH NCHAR(10), @SOLUONG INT
+AS
+BEGIN
+	SET XACT_ABORT ON 
+	BEGIN DISTRIBUTED TRANSACTION;
+
+-- Update SOLUONG from local instance.
+	UPDATE DBO.HangHoa
+	SET SOLUONGTON = SOLUONGTON + @SOLUONG
+	WHERE MAHH = @MAHH
+
+  COMMIT TRANSACTION;
+END
+
+--------
+
+
+CREATE PROCEDURE [dbo].[SP_TANGSL_KHO_PN]
+   @MAHH NCHAR(10),  @SOLUONG INT
+AS
+BEGIN
+	SET XACT_ABORT ON 
+	BEGIN DISTRIBUTED TRANSACTION;
+
+-- Update SOLUONG from local instance.
+	UPDATE DBO.HangHoa
+	SET SOLUONGTON = SOLUONGTON + @SOLUONG
+	WHERE MAHH = @MAHH
+
+  COMMIT TRANSACTION;
+END
+
+--------
+
+
+create procedure [dbo].[sp_TraCuu_KiemTraMaNhanVien]
+	@MANHANVIEN int
+as
+begin
+	if exists( select * from LINK0.QLVT_UDPT.dbo.NhanVien as NV where NV.MANV = @MANHANVIEN)
+		return 1; -- ma nhan vien ton tai
+	return 0; -- ma nhan vien khong ton tai
+end
+
+-------
+
+
