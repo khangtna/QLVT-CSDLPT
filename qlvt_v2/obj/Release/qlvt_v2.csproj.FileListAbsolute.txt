@@ -1,0 +1,8 @@
+C:\Users\Admin\source\repos\qlvt_v2\qlvt_v2\obj\Release\qlvt_v2.csproj.AssemblyReference.cache
+C:\Users\Admin\source\repos\qlvt_v2\qlvt_v2\obj\Release\qlvt_v2.frmDangNhap.resources
+C:\Users\Admin\source\repos\qlvt_v2\qlvt_v2\obj\Release\qlvt_v2.frmMain.resources
+C:\Users\Admin\source\repos\qlvt_v2\qlvt_v2\obj\Release\qlvt_v2.frmNhanVien.resources
+C:\Users\Admin\source\repos\qlvt_v2\qlvt_v2\obj\Release\qlvt_v2.Properties.Resources.resources
+C:\Users\Admin\source\repos\qlvt_v2\qlvt_v2\obj\Release\qlvt_v2.csproj.GenerateResource.cache
+C:\Users\Admin\source\repos\qlvt_v2\qlvt_v2\obj\Release\qlvt_v2.exe.licenses
+C:\Users\Admin\source\repos\qlvt_v2\qlvt_v2\obj\Release\qlvt_v2.csproj.CoreCompileInputs.cache
