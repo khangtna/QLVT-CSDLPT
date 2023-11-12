@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="dsview" targetNamespace="http://tempuri.org/dsview.xsd" xmlns:mstns="http://tempuri.org/dsview.xsd" xmlns="http://tempuri.org/dsview.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections>
+          <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="QLVT_UDPTConnectionString" ConnectionStringObject="" IsAppSettingsProperty="true" Modifier="Assembly" Name="QLVT_UDPTConnectionString (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.qlvt_v2.Properties.Settings.GlobalReference.Default.QLVT_UDPTConnectionString" Provider="System.Data.SqlClient" />
+        </Connections>
+        <Tables>
+          <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="VIEW_SLT_KHOTableAdapter" GeneratorDataComponentClassName="VIEW_SLT_KHOTableAdapter" Name="VIEW_SLT_KHO" UserDataComponentName="VIEW_SLT_KHOTableAdapter">
+            <MainSource>
+              <DbSource ConnectionRef="QLVT_UDPTConnectionString (Settings)" DbObjectName="QLVT_UDPT.dbo.VIEW_SLT_KHO" DbObjectType="View" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="false" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetData" UserSourceName="Fill">
+                <SelectCommand>
+                  <DbCommand CommandType="Text" ModifiedByUser="false">
+                    <CommandText>SELECT MAHH, TENHH, MAKHO, total FROM dbo.VIEW_SLT_KHO</CommandText>
+                    <Parameters />
+                  </DbCommand>
+                </SelectCommand>
+              </DbSource>
+            </MainSource>
+            <Mappings>
+              <Mapping SourceColumn="MAHH" DataSetColumn="MAHH" />
+              <Mapping SourceColumn="TENHH" DataSetColumn="TENHH" />
+              <Mapping SourceColumn="MAKHO" DataSetColumn="MAKHO" />
+              <Mapping SourceColumn="total" DataSetColumn="total" />
+            </Mappings>
+            <Sources />
+          </TableAdapter>
+        </Tables>
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="dsview" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:EnableTableAdapterManager="True" msprop:Generator_DataSetName="dsview" msprop:Generator_UserDSName="dsview">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="VIEW_SLT_KHO" msprop:Generator_TableClassName="VIEW_SLT_KHODataTable" msprop:Generator_TableVarName="tableVIEW_SLT_KHO" msprop:Generator_TablePropName="VIEW_SLT_KHO" msprop:Generator_RowDeletingName="VIEW_SLT_KHORowDeleting" msprop:Generator_RowChangingName="VIEW_SLT_KHORowChanging" msprop:Generator_RowEvHandlerName="VIEW_SLT_KHORowChangeEventHandler" msprop:Generator_RowDeletedName="VIEW_SLT_KHORowDeleted" msprop:Generator_UserTableName="VIEW_SLT_KHO" msprop:Generator_RowChangedName="VIEW_SLT_KHORowChanged" msprop:Generator_RowEvArgName="VIEW_SLT_KHORowChangeEvent" msprop:Generator_RowClassName="VIEW_SLT_KHORow">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="MAHH" msprop:Generator_ColumnVarNameInTable="columnMAHH" msprop:Generator_ColumnPropNameInRow="MAHH" msprop:Generator_ColumnPropNameInTable="MAHHColumn" msprop:Generator_UserColumnName="MAHH">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="10" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="TENHH" msprop:Generator_ColumnVarNameInTable="columnTENHH" msprop:Generator_ColumnPropNameInRow="TENHH" msprop:Generator_ColumnPropNameInTable="TENHHColumn" msprop:Generator_UserColumnName="TENHH">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="MAKHO" msprop:Generator_ColumnVarNameInTable="columnMAKHO" msprop:Generator_ColumnPropNameInRow="MAKHO" msprop:Generator_ColumnPropNameInTable="MAKHOColumn" msprop:Generator_UserColumnName="MAKHO">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="4" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="total" msprop:Generator_ColumnVarNameInTable="columntotal" msprop:Generator_ColumnPropNameInRow="total" msprop:Generator_ColumnPropNameInTable="totalColumn" msprop:Generator_UserColumnName="total" type="xs:int" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+    <xs:unique name="Constraint1" msdata:PrimaryKey="true">
+      <xs:selector xpath=".//mstns:VIEW_SLT_KHO" />
+      <xs:field xpath="mstns:MAHH" />
+      <xs:field xpath="mstns:MAKHO" />
+    </xs:unique>
+  </xs:element>
+</xs:schema>
